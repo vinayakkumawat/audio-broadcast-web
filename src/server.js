@@ -1,10 +1,10 @@
-import { createServer } from 'http';
-import { parse } from 'url';
-import next from 'next';
-import { Server } from 'socket.io';
+const { createServer } = require('http');
+const { parse } = require('url');
+const next = require('next');
+const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
-const app = next({ dev, port: 3000 }); // Next.js on port 3000
+const app = next({ dev, port: 3000 });
 const handle = app.getRequestHandler();
 
 let io;
@@ -18,9 +18,12 @@ app.prepare().then(() => {
   io = new Server(server, {
     path: '/socket.io',
     cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
-    }
+      origin: '*', // In production, replace with your specific domain
+      methods: ['GET', 'POST'],
+      credentials: true,
+      allowedHeaders: ['Content-Type']
+    },
+    transports: ['websocket', 'polling'] // Enable both WebSocket and polling
   });
 
   io.on('connection', (socket) => {
