@@ -4,41 +4,44 @@ import { jwtVerify } from 'jose';
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'MyJWTSecretkeyforthisapp');
 
+// Add paths that don't require authentication
+const publicPaths = ['/login', '/test'];
+
 export async function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth-token');
-  const isLoginPage = request.nextUrl.pathname === '/login';
-
-  try {
-    if (token) {
-      // Verify token
-      await jwtVerify(token.value, secret);
-      
-      // If token is valid and trying to access login page, redirect to home
-      if (isLoginPage) {
-        return NextResponse.redirect(new URL('/', request.url));
+  const { pathname } = request.nextUrl;
+  
+  // Check if the current path is public
+  if (publicPaths.includes(pathname)) {
+    // For login page, redirect to home if already authenticated
+    if (pathname === '/login') {
+      const token = request.cookies.get('auth-token');
+      if (token) {
+        try {
+          await jwtVerify(token.value, secret);
+          return NextResponse.redirect(new URL('/', request.url));
+        } catch {
+          return NextResponse.next();
+        }
       }
-      
-      // Allow access to other pages
-      return NextResponse.next();
     }
+    return NextResponse.next();
+  }
 
-    // No token present
-    if (!isLoginPage) {
-      // Redirect to login if accessing protected routes
+  // Handle protected routes
+  const token = request.cookies.get('auth-token');
+  
+  try {
+    if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // Allow access to login page when not authenticated
+    await jwtVerify(token.value, secret);
     return NextResponse.next();
   } catch {
-    // Invalid token
-    if (!isLoginPage) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return NextResponse.next();
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|uploads).*)'],
 };

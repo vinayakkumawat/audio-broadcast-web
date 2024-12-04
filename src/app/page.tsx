@@ -10,7 +10,8 @@ import type { Socket } from 'socket.io-client';
 export default function Home() {
   const router = useRouter();
   const [queue, setQueue] = useState<QueueState>({ items: [], currentlyPlaying: null });
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function Home() {
     });
 
     socket.on('newAudio', (audio: AudioItem) => {
-      console.log('New audio received:', audio);
+      console.log('New audio received');
       setQueue(prev => {
         const newQueue = {
           ...prev,
@@ -42,9 +43,10 @@ export default function Home() {
           setTimeout(() => {
             if (audioRef.current) {
               audioRef.current.src = audio.url;
-              audioRef.current.play().catch(console.error);
+              audioRef.current.load(); // Force reload of audio element
+              playAudio().catch(console.error);
             }
-          }, 0);
+          }, 100);
         }
 
         return newQueue;
@@ -56,7 +58,29 @@ export default function Home() {
     };
   }, []);
 
-  const playNext = () => {
+  const playAudio = async () => {
+    if (audioRef.current) {
+      try {
+        const playPromise = audioRef.current.play();
+        if (playPromise !== undefined) {
+          await playPromise;
+          setIsPlaying(true);
+        }
+      } catch (error) {
+        console.error('Error playing audio:', error);
+        setIsPlaying(false);
+      }
+    }
+  };
+
+  const pauseAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const playNext = async () => {
     if (queue.items.length > 0) {
       const nextItem = queue.items[0];
       const newQueue = {
@@ -67,15 +91,25 @@ export default function Home() {
       
       if (audioRef.current) {
         audioRef.current.src = nextItem.url;
-        audioRef.current.play().catch(console.error);
+        audioRef.current.load(); // Force reload of audio element
+        await playAudio();
       }
     } else {
       setQueue({ items: [], currentlyPlaying: null });
+      setIsPlaying(false);
     }
   };
 
   const handleAudioEnd = () => {
-    playNext();
+    playNext().catch(console.error);
+  };
+
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      playAudio().catch(console.error);
+    }
   };
 
   return (
@@ -113,19 +147,17 @@ export default function Home() {
                 </div>
                 <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => audioRef.current?.play()}
+                    onClick={togglePlayPause}
                     className="p-2 rounded-full hover:bg-gray-100"
                   >
-                    <Play className="h-6 w-6" />
+                    {isPlaying ? (
+                      <Pause className="h-6 w-6" />
+                    ) : (
+                      <Play className="h-6 w-6" />
+                    )}
                   </button>
                   <button
-                    onClick={() => audioRef.current?.pause()}
-                    className="p-2 rounded-full hover:bg-gray-100"
-                  >
-                    <Pause className="h-6 w-6" />
-                  </button>
-                  <button
-                    onClick={playNext}
+                    onClick={() => playNext()}
                     className="p-2 rounded-full hover:bg-gray-100"
                   >
                     <SkipForward className="h-6 w-6" />
@@ -135,8 +167,10 @@ export default function Home() {
               <audio
                 ref={audioRef}
                 onEnded={handleAudioEnd}
-                controls
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
                 className="w-full"
+                controls
               />
             </div>
           ) : (

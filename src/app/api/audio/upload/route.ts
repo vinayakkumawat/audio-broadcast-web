@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       id: uuidv4(),
       userId: 'test-user',
       username: 'Test User',
-      url: `data:${audioFile.type};base64,${base64Audio}`,
+      url: `data:audio/webm;base64,${base64Audio}`,
       duration: 0,
       createdAt: new Date().toISOString(),
       status: 'pending'
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
     // Emit the new audio item to all connected clients
     if (io) {
-      console.log('Emitting new audio to clients:', audioItem);
+      console.log('Emitting new audio to clients');
       io.emit('newAudio', audioItem);
     } else {
       console.warn('Socket.IO instance not found');
