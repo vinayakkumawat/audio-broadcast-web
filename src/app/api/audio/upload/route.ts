@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
-import { promises as fs } from 'fs';
-import path from 'path';
 import type { Server } from 'socket.io';
 
 declare global {
-  // eslint-disable-next-line no-var
   var io: Server | undefined;
 }
 
@@ -21,22 +18,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    await fs.mkdir(uploadsDir, { recursive: true });
+    // Convert audio file to base64
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Audio = buffer.toString('base64');
 
-    // Save file
-    const buffer = Buffer.from(await audioFile.arrayBuffer());
-    const filename = `${uuidv4()}.webm`;
-    const filePath = path.join(uploadsDir, filename);
-    await fs.writeFile(filePath, buffer);
-
-    // Create audio item
+    // Create audio item with base64 data
     const audioItem = {
       id: uuidv4(),
       userId: 'test-user',
       username: 'Test User',
-      url: `/uploads/${filename}`,
+      url: `data:${audioFile.type};base64,${base64Audio}`,
       duration: 0,
       createdAt: new Date().toISOString(),
       status: 'pending'
