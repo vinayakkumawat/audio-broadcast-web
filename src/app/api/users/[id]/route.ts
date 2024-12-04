@@ -5,6 +5,7 @@ import path from 'path';
 const USERS_FILE = path.join(process.cwd(), 'data', 'users.csv');
 
 export async function DELETE(
+  request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
