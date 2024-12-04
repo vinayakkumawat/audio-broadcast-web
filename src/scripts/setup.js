@@ -1,13 +1,15 @@
 import { promises as fs } from 'fs';
 import { join } from 'path';
-import { bcrypt } from 'bcryptjs';
+import bcrypt from 'bcryptjs';
+
+const { hashSync } = bcrypt;
 
 async function setup() {
   try {
     // Default admin credentials
     const defaultEmail = 'admin@example.com';
     const defaultPassword = 'admin123'; // This will be hashed
-    const hashedPassword = bcrypt.hashSync(defaultPassword, 10);
+    const hashedPassword = hashSync(defaultPassword, 10);
 
     // Ensure data directory exists
     const dataDir = join(process.cwd(), 'data');
