@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Server } from 'socket.io';
 
 declare global {
-  var io: Server | undefined;
+  let io: Server | undefined;
 }
 
 export async function POST(request: Request) {
@@ -35,9 +35,9 @@ export async function POST(request: Request) {
     };
 
     // Emit the new audio item to all connected clients
-    if (global.io) {
+    if (io) {
       console.log('Emitting new audio to clients:', audioItem);
-      global.io.emit('newAudio', audioItem);
+      io.emit('newAudio', audioItem);
     } else {
       console.warn('Socket.IO instance not found');
     }
