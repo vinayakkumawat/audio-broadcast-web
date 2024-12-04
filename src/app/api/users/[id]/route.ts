@@ -5,8 +5,8 @@ import path from 'path';
 const USERS_FILE = path.join(process.cwd(), 'data', 'users.csv');
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _request: Request,
+  { params }: { params: { id: string }, searchParams: { [key: string]: string | string[] | undefined } }
 ) {
   try {
     const content = await fs.readFile(USERS_FILE, 'utf-8');
