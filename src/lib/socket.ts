@@ -4,18 +4,16 @@ let socket: Socket | null = null;
 
 export const initSocket = () => {
   if (!socket) {
-    // Use the server URL directly if it's available, otherwise fall back to window.location.origin
-    const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL || window.location.origin;
+    const url = window.location.origin;
     
-    socket = io(serverUrl, {
+    socket = io(url, {
       path: '/socket.io',
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,
-      autoConnect: true,
-      withCredentials: true // Enable CORS credentials
+      autoConnect: true
     });
 
     socket.on('connect', () => {
