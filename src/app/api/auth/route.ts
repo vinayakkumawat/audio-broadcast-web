@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { error: 'Authentication failed: ' + error },
       { status: 500 }
     );
   }

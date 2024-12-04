@@ -4,11 +4,21 @@ import { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import type { User } from '@/lib/types';
 
+interface ApiError {
+  message: string;
+}
+
+interface NewUser {
+  username: string;
+  email: string;
+  password: string;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
-  const [newUser, setNewUser] = useState({ username: '', email: '', password: '' });
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [newUser, setNewUser] = useState<NewUser>({ username: '', email: '', password: '' });
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -17,15 +27,22 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/users');
+      if (!res.ok) throw new Error('Failed to fetch users');
       const data = await res.json();
       setUsers(data.users);
-    } catch (err) {
-      setError('Failed to fetch users');
+      setError(null);
+    } catch (error) {
+      const apiError = error as ApiError;
+      setError(apiError.message || 'Failed to fetch users');
+      console.error('Error fetching users:', apiError);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
     try {
       const res = await fetch('/api/users', {
         method: 'POST',
@@ -33,28 +50,41 @@ export default function UsersPage() {
         body: JSON.stringify(newUser),
       });
 
-      if (!res.ok) throw new Error('Failed to create user');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create user');
+      }
 
       setSuccess('User created successfully');
       setNewUser({ username: '', email: '', password: '' });
       fetchUsers();
-    } catch (err) {
-      setError('Failed to create user');
+    } catch (error) {
+      const apiError = error as ApiError;
+      setError(apiError.message || 'Failed to create user');
+      console.error('Error creating user:', apiError);
     }
   };
 
   const handleDelete = async (userId: string) => {
+    setError(null);
+    setSuccess(null);
+
     try {
       const res = await fetch(`/api/users/${userId}`, {
         method: 'DELETE',
       });
 
-      if (!res.ok) throw new Error('Failed to delete user');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to delete user');
+      }
 
       setSuccess('User deleted successfully');
       fetchUsers();
-    } catch (err) {
-      setError('Failed to delete user');
+    } catch (error) {
+      const apiError = error as ApiError;
+      setError(apiError.message || 'Failed to delete user');
+      console.error('Error deleting user:', apiError);
     }
   };
 
@@ -62,6 +92,18 @@ export default function UsersPage() {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Manage Users</h1>
+
+        {error && (
+          <div className="bg-red-50 text-red-500 p-4 rounded-md mb-4">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="bg-green-50 text-green-500 p-4 rounded-md mb-4">
+            {success}
+          </div>
+        )}
 
         {/* Add User Form */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-8">

@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings } from 'lucide-react';
 
+interface ApiError extends Error {
+  message: string;
+}
+
 export default function SettingsPage() {
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -44,8 +48,9 @@ export default function SettingsPage() {
         router.push('/login');
         router.refresh();
       }, 2000);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err as ApiError;
+      setError(error.message);
     }
   };
 

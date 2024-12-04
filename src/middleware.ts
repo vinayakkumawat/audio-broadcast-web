@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
 
     // Allow access to login page when not authenticated
     return NextResponse.next();
-  } catch (error) {
+  } catch {
     // Invalid token
     if (!isLoginPage) {
       return NextResponse.redirect(new URL('/login', request.url));

@@ -2,15 +2,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Settings, Users, Play, Pause, SkipForward } from 'lucide-react';
+import { Play, Pause, SkipForward } from 'lucide-react';
 import type { AudioItem, QueueState } from '@/lib/types';
 import { initSocket } from '@/lib/socket';
+import type { Socket } from 'socket.io-client';
 
 export default function Home() {
   const router = useRouter();
   const [queue, setQueue] = useState<QueueState>({ items: [], currentlyPlaying: null });
   const audioRef = useRef<HTMLAudioElement>(null);
-  const socketRef = useRef<any>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     const socket = initSocket();
@@ -55,14 +56,6 @@ export default function Home() {
     };
   }, []);
 
-  const handleLogout = async () => {
-    const res = await fetch('/api/auth/logout', { method: 'POST' });
-    if (res.ok) {
-      router.push('/login');
-      router.refresh();
-    }
-  };
-
   const playNext = () => {
     if (queue.items.length > 0) {
       const nextItem = queue.items[0];
@@ -95,25 +88,10 @@ export default function Home() {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/users')}
+                onClick={() => router.push('/test')}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90"
               >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Users
-              </button>
-              <button
-                onClick={() => router.push('/settings')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </button>
-              <button
-                onClick={handleLogout}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+                Test Audio Upload
               </button>
             </div>
           </div>
@@ -179,9 +157,6 @@ export default function Home() {
                       {new Date(item.createdAt).toLocaleString()}
                     </p>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    Duration: {Math.round(item.duration)}s
-                  </span>
                 </li>
               ))}
             </ul>

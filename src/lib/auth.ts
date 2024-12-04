@@ -16,7 +16,7 @@ export async function validateCredentials(email: string, password: string): Prom
       const fileContent = await fs.readFile(csvPath, 'utf-8');
       
       // Skip header row and split into lines
-      const [_, adminLine] = fileContent.split('\n');
+      const [, adminLine] = fileContent.split('\n');
       if (!adminLine) return false;
       
       const [storedEmail, hashedPassword] = adminLine.split(',');
@@ -32,7 +32,7 @@ export async function validateCredentials(email: string, password: string): Prom
         
         // Retry validation with newly created database
         const fileContent = await fs.readFile(csvPath, 'utf-8');
-        const [_, adminLine] = fileContent.split('\n');
+        const [, adminLine] = fileContent.split('\n');
         if (!adminLine) return false;
         
         const [storedEmail, hashedPassword] = adminLine.split(',');
