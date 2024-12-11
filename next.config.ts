@@ -6,7 +6,12 @@ const nextConfig = {
         source: '/',
         destination: '/login',
         permanent: false,
-        missing: ['auth-token'],
+        missing: [
+          {
+            type: 'cookie',
+            key: 'auth-token'
+          }
+        ],
       },
     ];
   },
