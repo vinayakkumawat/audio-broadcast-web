@@ -9,34 +9,43 @@ const publicPaths = ['/login', '/test'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get('auth-token');
+
+  // Debug logging (remove in production)
+  console.log('Middleware called for path:', pathname);
+  console.log('Token exists:', !!token);
 
   // Check if the current path is public
   if (publicPaths.includes(pathname)) {
     // For login page, redirect to home if already authenticated
-    if (pathname === '/login') {
-      const token = request.cookies.get('auth-token');
-      if (token) {
-        try {
-          await jwtVerify(token.value, secret);
-          return NextResponse.redirect(new URL('/', request.url));
-        } catch {
-          return NextResponse.next();
-        }
+    if (pathname === '/login' && token) {
+      try {
+        await jwtVerify(token.value, secret);
+        const homeUrl = new URL('/', request.url);
+        console.log('Redirecting to home:', homeUrl.toString());
+        return NextResponse.redirect(homeUrl);
+      } catch {
+        // Invalid token, proceed to login
+        return NextResponse.next();
       }
     }
     return NextResponse.next();
   }
 
   // Handle protected routes
-  const token = request.cookies.get('auth-token');
   try {
     if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
+      const loginUrl = new URL('/login', request.url);
+      console.log('No token, redirecting to login:', loginUrl.toString());
+      return NextResponse.redirect(loginUrl);
     }
+
     await jwtVerify(token.value, secret);
     return NextResponse.next();
   } catch {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const loginUrl = new URL('/login', request.url);
+    console.log('Invalid token, redirecting to login:', loginUrl.toString());
+    return NextResponse.redirect(loginUrl);
   }
 }
 

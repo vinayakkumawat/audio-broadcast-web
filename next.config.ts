@@ -1,7 +1,29 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/login',
+        permanent: false,
+        missing: ['auth-token'],
+      },
+    ];
+  },
+  // Optional: If you're using a custom domain
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Forwarded-Proto',
+            value: 'https'
+          }
+        ]
+      }
+    ];
+  }
 };
 
-export default nextConfig;
+module.exports = nextConfig;

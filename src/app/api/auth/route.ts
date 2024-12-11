@@ -23,15 +23,19 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({ success: true });
     
-    response.cookies.set('auth-token', token, {
+    response.cookies.set({
+      name: 'auth-token',
+      value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 86400 // 24 hours
+      maxAge: 86400, // 24 hours
+      path: '/' // Ensure cookie is set for entire site
     });
 
     return response;
   } catch (error) {
+    console.error('Authentication error:', error);
     return NextResponse.json(
       { error: 'Authentication failed: ' + error }, 
       { status: 500 }
