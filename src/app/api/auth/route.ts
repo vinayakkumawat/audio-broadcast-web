@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { validateCredentials } from '@/lib/auth';
-import { cookies } from 'next/headers';
 import { SignJWT } from 'jose';
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'MyJWTSecretkeyforthisapp');
@@ -12,7 +11,7 @@ export async function POST(request: Request) {
 
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: 'Invalid credentials' }, 
         { status: 401 }
       );
     }
@@ -22,17 +21,19 @@ export async function POST(request: Request) {
       .setExpirationTime('24h')
       .sign(secret);
 
-    (await cookies()).set('auth-token', token, {
+    const response = NextResponse.json({ success: true });
+    
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 86400 // 24 hours
     });
 
-    return NextResponse.json({ success: true });
+    return response;
   } catch (error) {
     return NextResponse.json(
-      { error: 'Authentication failed: ' + error },
+      { error: 'Authentication failed: ' + error }, 
       { status: 500 }
     );
   }

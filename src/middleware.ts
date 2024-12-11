@@ -9,7 +9,7 @@ const publicPaths = ['/login', '/test'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Check if the current path is public
   if (publicPaths.includes(pathname)) {
     // For login page, redirect to home if already authenticated
@@ -29,12 +29,10 @@ export async function middleware(request: NextRequest) {
 
   // Handle protected routes
   const token = request.cookies.get('auth-token');
-  
   try {
     if (!token) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-
     await jwtVerify(token.value, secret);
     return NextResponse.next();
   } catch {
